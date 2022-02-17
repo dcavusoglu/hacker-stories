@@ -36,15 +36,23 @@ const App = () => {
     points: 5,
     objectID: 1,
   }];
+  const [searchTerm, setSearchTerm] = React.useState('');
+
   const handleSearch = e => {
-    console.log(e.target.value);
-  }
+    setSearchTerm(e.target.value);
+  };
+
+  const searchedStories = stories.filter(story =>
+    story.title.toLowerCase()
+    .includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div>
       <h1>My hacker stories</h1>
       <Search onSearch={handleSearch}/>
       <hr/>
-      <List list={stories}/>
+      <List list={searchedStories}/>
     </div>
   );
 };
