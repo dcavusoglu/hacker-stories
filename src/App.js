@@ -36,10 +36,18 @@ const App = () => {
     points: 5,
     objectID: 1,
   }];
-  const [searchTerm, setSearchTerm] = React.useState('React');
+
+  const [searchTerm, setSearchTerm] = React.useState(
+    localStorage.getItem('search') || 'React'
+    );
+
+  React.useEffect(() => {
+    localStorage.setItem('search', searchTerm);
+  }, [searchTerm]);
 
   const handleSearch = e => {
     setSearchTerm(e.target.value);
+    localStorage.setItem('search', e.target.value);
   };
 
   const searchedStories = stories.filter(story =>
