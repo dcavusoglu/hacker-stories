@@ -50,49 +50,72 @@ const App = () => {
   }];
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState(
-    'search'
-  );
+    'search',
+    'React'
+    );
 
-  const handleSearch = e => {
-    setSearchTerm(e.target.value);
-    localStorage.setItem('search', e.target.value);
-  };
+    const handleSearch = e => {
+      setSearchTerm(e.target.value);
+    };
 
-  const searchedStories = stories.filter(story =>
-    story.title.toLowerCase()
-    .includes(searchTerm.toLowerCase())
-  );
+    const searchedStories = stories.filter(story =>
+      story.title.toLowerCase()
+      .includes(searchTerm.toLowerCase())
+      );
 
-  return (
-    <div>
+      return (
+        <div>
       <h1>My hacker stories</h1>
-      <Search search ={searchTerm} onSearch={handleSearch}/>
+
+      <InputWithLabel
+        id='search'
+        value ={searchTerm}
+        onInputChange={handleSearch}
+        >
+        <strong>Search</strong>
+      </InputWithLabel>
       <hr/>
       <List list={searchedStories}/>
+      <hr/>
     </div>
   );
 };
 
-const Search = ( { search, onSearch} ) => {
-  return (
-    <div>
-      <label htmlFor='search'>Search:</label>
-      <input id='search' type="text" value ={search} onChange={onSearch}/>
-    </div>
-  );
-};
+// const Search = ( { search, onSearch} ) => {
+  //   return (
+    //     <>
+    //       <label htmlFor='search'>Search:</label>
+    //       <input id='search' type="text" value ={search} onChange={onSearch}/>
+    //     </>
+    //   );
+    // };
 
-const List = ({ list }) =>
+
+    const List = ({ list }) =>
     list.map(item => <Item key={item.objectID} item = {item}/>);
+
     const Item = ( {item} ) => (
-        <div>
-          <span>
-            <a href={item.url}>{item.title}</a>
-          </span>
-          <span>{item.author}</span>
-          <span>{item.num_comments}</span>
-          <span>{item.points}</span>
-        </div>
-      );
+      <div>
+    <span>
+      <a href={item.url}>{item.title}</a>
+    </span>
+    <span>{item.author}</span>
+    <span>{item.num_comments}</span>
+    <span>{item.points}</span>
+  </div>
+);
+
+const InputWithLabel = ({ id, value, type='text', onInputChange, children, }) => (
+  <>
+    <label htmlFor="{id}">{children}</label>
+    &nbsp;
+    <input
+      id={id}
+      type='text'
+      value={value}
+      onChange={onInputChange}
+    />
+  </>
+);
 
 export default App;
