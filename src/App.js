@@ -1,8 +1,8 @@
 import React from 'react';
 import axios from 'axios';
-import styles from './App.css';
-import {ReactComponent as Check} from './check.svg'
 
+import './App.css';
+import { ReactComponent as Check } from './check.svg';
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -66,14 +66,19 @@ const App = () => {
     { data: [], isLoading: false, isError: false }
   );
 
-  const handleFetchStories = React.useCallback( async () => {
+  const handleFetchStories = React.useCallback(async () => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
-    const result = await axios.get(url)
 
-        dispatchStories({
-          type: 'STORIES_FETCH_SUCCESS',
-          payload: result.data.hits,
-        });
+    try {
+      const result = await axios.get(url);
+
+      dispatchStories({
+        type: 'STORIES_FETCH_SUCCESS',
+        payload: result.data.hits,
+      });
+    } catch {
+      dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
+    }
   }, [url]);
 
   React.useEffect(() => {
@@ -93,12 +98,14 @@ const App = () => {
 
   const handleSearchSubmit = event => {
     setUrl(`${API_ENDPOINT}${searchTerm}`);
+
     event.preventDefault();
   };
 
   return (
     <div className="container">
       <h1 className="headline-primary">My Hacker Stories</h1>
+
       <SearchForm
         searchTerm={searchTerm}
         onSearchInput={handleSearchInput}
@@ -123,19 +130,24 @@ const SearchForm = ({
 }) => (
   <form onSubmit={onSearchSubmit} className="search-form">
     <InputWithLabel
-        id="search"
-        value={searchTerm}
-        isFocused
-        onInputChange={onSearchInput}
-      >
-        <strong>Search:</strong>
-      </InputWithLabel>
+      id="search"
+      value={searchTerm}
+      isFocused
+      onInputChange={onSearchInput}
+    >
+      <strong>Search:</strong>
+    </InputWithLabel>
 
-      <button type="submit" disabled={!searchTerm} className="button button-large">
-        Submit
-      </button>
+    <button
+      type="submit"
+      disabled={!searchTerm}
+      className="button button_large"
+    >
+      Submit
+    </button>
   </form>
-)
+);
+
 const InputWithLabel = ({
   id,
   value,
@@ -154,7 +166,9 @@ const InputWithLabel = ({
 
   return (
     <>
-      <label htmlFor={id} className="label">{children}</label>
+      <label htmlFor={id} className="label">
+        {children}
+      </label>
       &nbsp;
       <input
         ref={inputRef}
@@ -179,18 +193,23 @@ const List = ({ list, onRemoveItem }) =>
 
 const Item = ({ item, onRemoveItem }) => (
   <div className="item">
-    <span style={{width: '40%'}}>
+    <span style={{ width: '40%' }}>
       <a href={item.url}>{item.title}</a>
     </span>
-    <span style={{width: '30%'}}>{item.author}</span>
-    <span style={{width: '10%'}}>{item.num_comments}</span>
-    <span style={{width: '10%'}}>{item.points}</span>
-    <span style={{width: '10%'}}>
-      <button type="button" onClick={() => onRemoveItem(item)} className="button button-small">
-        <Check height="18px" width="18px"/>
+    <span style={{ width: '30%' }}>{item.author}</span>
+    <span style={{ width: '10%' }}>{item.num_comments}</span>
+    <span style={{ width: '10%' }}>{item.points}</span>
+    <span style={{ width: '10%' }}>
+      <button
+        type="button"
+        onClick={() => onRemoveItem(item)}
+        className="button button_small"
+      >
+        <Check height="18px" width="18px" />
       </button>
     </span>
   </div>
 );
 
 export default App;
+export { SearchForm, InputWithLabel, Item, List }
