@@ -6,13 +6,31 @@ import SearchForm from './SearchForm';
 import List from './List';
 import LastSearches from './LastSearches';
 
-const API_BASE = 'https://hn.algolia.com/api/v1';
-const API_SEARCH = '/search';
-const PARAM_SEARCH = 'query=';
-const PARAM_PAGE = 'page=';
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
-const getUrl = (searchTerm, page) =>
-  `${API_BASE}${API_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`;
+const getUrl = searchTerm => `${API_ENDPOINT}${searchTerm}`;
+
+const extractSearchTerm = url => url.replace(API_ENDPOINT, '');
+
+const getLastSearches = urls =>
+  urls
+    .reduce((result, url, index) => {
+      const searchTerm = extractSearchTerm(url);
+
+      if (index === 0) {
+        return result.concat(searchTerm);
+      }
+
+      const previousSearchTerm = result[result.length - 1];
+
+      if (searchTerm === previousSearchTerm) {
+        return result;
+      } else {
+        return result.concat(searchTerm);
+      }
+    }, [])
+    .slice(-6)
+    .slice(0, -1);
 
 const useSemiPersistentState = (key, initialState) => {
   const [value, setValue] = React.useState(
@@ -39,11 +57,7 @@ const storiesReducer = (state, action) => {
         ...state,
         isLoading: false,
         isError: false,
-        data:
-          action.payload.page === 0
-            ? action.payload.list
-            : state.data.concat(action.payload.list),
-        page: action.payload.page,
+        data: action.payload,
       };
     case 'STORIES_FETCH_FAILURE':
       return {
@@ -63,28 +77,6 @@ const storiesReducer = (state, action) => {
   }
 };
 
-const extractSearchTerm = url =>
-  url
-    .substring(url.lastIndexOf('?') + 1, url.lastIndexOf('&'))
-    .replace(PARAM_SEARCH, '');
-
-const getLastSearches = urls =>
-  urls.reduce((result, url, index) => {
-    const searchTerm = extractSearchTerm(url);
-
-    if(index === 0) {
-      return result.concat(searchTerm);
-    }
-    const previousSearchTerm = result[result.length -1];
-    if(searchTerm === previousSearchTerm) {
-      return result;
-    } else {
-      return result.concat(searchTerm);
-    }
-  }, [])
-  .slice(-6)
-  .slice(0,-1).map(extractSearchTerm);
-
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState(
@@ -92,11 +84,11 @@ const App = () => {
     'React'
   );
 
-  const [urls, setUrls] = React.useState([getUrl(searchTerm, 0)]);
+  const [urls, setUrls] = React.useState([getUrl(searchTerm)]);
 
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
-    { data: [], page: 0, isLoading: false, isError: false }
+    { data: [], isLoading: false, isError: false }
   );
 
   const handleFetchStories = React.useCallback(async () => {
@@ -108,10 +100,7 @@ const App = () => {
 
       dispatchStories({
         type: 'STORIES_FETCH_SUCCESS',
-        payload: {
-          list: result.data.hits,
-          page: result.data.page,
-        },
+        payload: result.data.hits,
       });
     } catch {
       dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
@@ -134,7 +123,7 @@ const App = () => {
   };
 
   const handleSearchSubmit = event => {
-    handleSearch(searchTerm, 0);
+    handleSearch(searchTerm);
 
     event.preventDefault();
   };
@@ -142,25 +131,19 @@ const App = () => {
   const handleLastSearch = searchTerm => {
     setSearchTerm(searchTerm);
 
-    handleSearch(searchTerm, 0);
+    handleSearch(searchTerm);
   };
 
-  const handleMore = () => {
-    const lastUrl = urls[urls.length - 1];
-    const searchTerm = extractSearchTerm(lastUrl);
-    handleSearch(searchTerm, stories.page + 1);
-  };
-
-  const handleSearch = (searchTerm, page) => {
-    const url = getUrl(searchTerm, page);
+  const handleSearch = searchTerm => {
+    const url = getUrl(searchTerm);
     setUrls(urls.concat(url));
   };
 
   const lastSearches = getLastSearches(urls);
 
   return (
-    <div className="container">
-      <h1 className="headline-primary">My Hacker Stories</h1>
+    <div className='container'>
+      <h1 className='header-primary'>My Hacker Stories</h1>
 
       <SearchForm
         searchTerm={searchTerm}
@@ -173,22 +156,18 @@ const App = () => {
         onLastSearch={handleLastSearch}
       />
 
+      <hr />
 
       {stories.isError && <p>Something went wrong ...</p>}
-
-      <List list={stories.data} onRemoveItem={handleRemoveStory} />
 
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-        <button type="button" onClick={handleMore}>
-          More
-        </button>
+        <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
     </div>
   );
 };
-
 
 
 export default App;
